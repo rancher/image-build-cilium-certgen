@@ -1,7 +1,5 @@
 ARG GO_IMAGE=rancher/hardened-build-base:v1.26.4b1
-ARG BCI_IMAGE=registry.suse.com/bci/bci-nano:16.0
 
-# Image that provides cross compilation tooling.
 FROM --platform=$BUILDPLATFORM rancher/mirrored-tonistiigi-xx:1.6.1 AS xx
 
 FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS builder
@@ -26,8 +24,6 @@ RUN if [ "$(xx-info arch)" = "amd64" ]; then \
         go-assert-boring.sh /usr/local/bin/cilium-certgen; \
     fi
 
-FROM ${BCI_IMAGE} AS hardened-cilium-certgen
-LABEL org.opencontainers.image.description="Cilium certgen"
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+FROM scratch AS hardened-cilium-certgen
 COPY --from=builder /usr/local/bin/cilium-certgen /usr/bin/cilium-certgen
 ENTRYPOINT ["/usr/bin/cilium-certgen"]
