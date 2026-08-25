@@ -1,4 +1,4 @@
-ARG GO_IMAGE=rancher/hardened-build-base:v1.26.4b1
+ARG GO_IMAGE=rancher/hardened-build-base:v1.26.6b1
 
 FROM --platform=$BUILDPLATFORM rancher/mirrored-tonistiigi-xx:1.6.1 AS xx
 
@@ -14,7 +14,9 @@ RUN git clone --depth=1 https://${PKG}.git $GOPATH/src/${PKG}
 WORKDIR $GOPATH/src/${PKG}
 RUN git fetch --all --tags --prune
 RUN git checkout tags/${TAG} -b ${TAG}
-
+COPY go-mod-overrides ./go-mod-overrides
+RUN go-mod-overrides.sh ./go-mod-overrides
+RUN go mod download
 ARG TARGETARCH
 RUN xx-go --wrap && \
     go-build-static.sh -mod=vendor -tags osusergo,netgo -gcflags=-trimpath=${GOPATH}/src \
